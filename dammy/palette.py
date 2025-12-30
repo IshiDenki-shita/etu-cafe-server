@@ -1,0 +1,47 @@
+""" """
+
+"""
+色々なインポート
+"""
+from flask import Flask, request, jsonify
+import requests
+from pathlib import Path
+import json
+from datetime import datetime
+import time
+
+app = Flask(__file__)
+
+"""
+必要なURLや、このファイルからの相対パス設定用
+"""
+# 斎藤VPS（ラズパイ直上VPS）のURL
+url_saitoVPS = "http://127.0.0.1:5000"
+
+
+"""
+postで受け取ったjsonを斎藤VPSにpostする関数
+"""
+def post_to_saito(latest_menu):
+    while True:
+        try:
+            res = requests.post(url_saitoVPS, json=latest_menu)
+        except Exception as e:
+            print("\nあかーん エラー発生")
+            print(e)
+            print("\n\n★★★POSTに対するレスポンス★★★")
+            print("ステータスコード")
+            print(res.status_code)
+            print("\n\nレスポンス本文")
+            print(res.text)
+
+menu_dict = {
+    "menu1": {"name": "担々麺", "price": 200, "date": '2026-1-20'},
+    "menu2": {"name": "春巻き", "price": 300, "date": '2026-1-21'},
+}
+
+menu = json.dumps(menu_dict, ensure_ascii=False)
+
+print("\n\n作られたjson")
+print(menu)
+post_to_saito(menu)
