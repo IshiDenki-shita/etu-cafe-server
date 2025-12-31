@@ -17,7 +17,7 @@ url_saitoVPS = "http://127.0.0.1:5001"
 # このapp.pyのパス。.resolveで絶対パスにする
 path_HERE = Path(__file__).resolve()
 # バックアップ用のフォルダ history のパスを格納
-path_history = path_HERE.parent  / 'history'
+path_history = path_HERE.parent.parent / 'history'
 # history 自体が無いと日付フォルダ作成が失敗するので、親を先に作る
 path_history.mkdir(parents=True, exist_ok=True)
 

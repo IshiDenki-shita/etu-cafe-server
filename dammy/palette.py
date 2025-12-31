@@ -36,8 +36,11 @@ def post_to_saito(latest_menu):
             print(res.text)
 
 menu_dict = {
-    "menu1": {"name": "担々麺", "price": 200, "date": '2026-1-20'},
-    "menu2": {"name": "春巻き", "price": 300, "date": '2026-1-21'},
+    "generated_at": "2025-12-30T23:19:51+09:00",
+    "menus": [
+        {"name": "担々麺", "price": 200, "date": "2026-01-20", "price": 500},
+        {"name": "春巻き", "price": 300, "date": "2026-01-21", "price": 130},
+    ]
 }
 
 menu = json.dumps(menu_dict, ensure_ascii=False)

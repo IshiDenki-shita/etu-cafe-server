@@ -5,8 +5,8 @@ import json
 url = "http://127.0.0.1:5000/menu_post"
 
 menu_dict = {
-    "menu1": {"name": "担々麺", "price": 200, "date": '2026-1-20'},
-    "menu2": {"name": "春巻き", "price": 300, "date": '2026-1-21'},
+    "menu1": {"name": "担々麺", "date": '2026-1-20'},
+    "menu2": {"name": "春巻き", "date": '2026-1-21'},
 }
 
 
