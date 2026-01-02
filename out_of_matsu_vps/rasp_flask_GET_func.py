@@ -29,6 +29,6 @@ def page_menu():
     menu_row = cafe1.latest_menu_dict["menus"]
 
     return render_template(
-        "rasp_html_cafe.html",
+        "templates/rasp_html_cafe.html",
         menu_row = menu_row
     )

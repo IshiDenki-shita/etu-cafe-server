@@ -1,0 +1,33 @@
+# Flask を常駐起動（起動前に(A)を必ず実行）
+
+[Unit]
+Description=Matsu Flask receiver (flaskr.py)
+Wants=network-online.target
+After=network-online.target
+Requires=matsu-setup.service
+After=matsu-setup.service
+
+[Service]
+# ExecStart で起動したプロセスがそのまま常駐するタイプ。
+Type=simple
+
+# root ではなく e231238 ユーザー権限。history への書き込みなどがユーザー所有になり、権限事故が起きにくい。
+User=e231238
+
+# 起動時のカレントディレクトリを app にする。
+WorkingDirectory=/home/e231238/3ETU/matsu_temp_box/app
+
+# なんかログを見やすくするらしい
+Environment=PYTHONUNBUFFERED=1
+
+# 実際にflaskr.pyを起動するコマンド
+ExecStart=/home/e231238/3ETU/matsu_temp_box/.venv/bin/python /home/e231238/3ETU/matsu_temp_box/app/flaskr.py
+
+# プロセスが落ちたら常に再起動する。
+Restart=on-failure
+
+# 再起動まで3秒待つ
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

@@ -23,18 +23,12 @@ url_saitoVPS = "http://127.0.0.1:5000"
 postで受け取ったjsonを斎藤VPSにpostする関数
 """
 def post_to_saito(latest_menu):
-    while True:
-        try:
-            res = requests.post(url_saitoVPS, json=latest_menu)
-        except Exception as e:
-            print("\nあかーん エラー発生")
-            print(e)
-            print("\n\n★★★POSTに対するレスポンス★★★")
-            print("ステータスコード")
-            print(res.status_code)
-            print("\n\nレスポンス本文")
-            print(res.text)
-
+    try:
+        res = requests.post(url_saitoVPS, json=latest_menu)
+    except Exception as e:
+        print("\nあかーん エラー発生")
+        print(e)
+        
 menu_dict = {
     "generated_at": "2025-12-30T23:19:51+09:00",
     "menus": [

@@ -12,7 +12,7 @@ from datetime import datetime
 必要なURLや、このファイルからの相対パス設定用
 """
 # 斎藤VPS（ラズパイ直上VPS）のURL
-url_saitoVPS = "http://127.0.0.1:5001"
+url_saitoVPS = "http://127.0.0.1:5001/cafe_menu"
 
 # このapp.pyのパス。.resolveで絶対パスにする
 path_HERE = Path(__file__).resolve()
@@ -75,10 +75,16 @@ POSTを貰ってデータを格納する関数
 def receive_menu_json():
     latest_data = request.get_data()
 
-    now = datetime.now()
     # historyフォルダ内にバックアップ
+    now = datetime.now()
     save_latest(now, latest_data)
     # 斎藤VPSに転送
     post_to_saito(latest_data)
 
     return jsonify({"matsu_VPS_received":True}) , 200
+
+def main():
+    app.run(host="0.0.0.0", port=5000)
+
+if __name__ == "__main__":
+    main()

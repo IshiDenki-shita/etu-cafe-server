@@ -1,13 +1,12 @@
 # 偽の斎藤VPS
 
 from flask import Flask, request, jsonify
-import requests
 import json
 
 app = Flask(__file__)
 
 
-@app.post("/")
+@app.post("/cafe_menu")
 def receive_menu_json():
     latest_data = request.get_data()
     latest_dict = json.loads(latest_data)
