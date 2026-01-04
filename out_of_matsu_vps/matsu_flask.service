@@ -4,8 +4,8 @@
 Description=Matsu Flask receiver (flaskr.py)
 Wants=network-online.target
 After=network-online.target
-Requires=matsu-setup.service
-After=matsu-setup.service
+Requires=matsu_setup.service
+After=matsu_setup.service
 
 [Service]
 # ExecStart で起動したプロセスがそのまま常駐するタイプ。
