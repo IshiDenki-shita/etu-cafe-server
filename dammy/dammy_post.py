@@ -1,17 +1,24 @@
 import requests
-import json
+from datetime import datetime, timezone, timedelta
 
 # 松本VPSへのURL
 url = "http://100.122.164.48:5000/menu_post"
+# url = "http://127.0.0.1:5050/menu_post"
+
+# JST(+09:00)のISO8601文字列を生成（例: 2026-01-05T12:34:56+09:00）
+JST = timezone(timedelta(hours=9))
 
 menu_dict = {
-    "menu1": {"name": "担々麺", "date": '2026-1-20'},
-    "menu2": {"name": "春巻き", "date": '2026-1-21'},
+    "generated_at": datetime.now(JST).isoformat(timespec="seconds"),
+    "menus": [
+        {"name": "ダミー担々麺", "date": "2026-01-20", "price": 500},
+        {"name": "ダミー春巻き", "date": "2026-01-21", "price": 130},
+        {"name": "ダミー親子丼", "date": "2026-01-22", "price": 550}
+    ],
 }
 
 
 def post_dammy_menu(url, menu_dict):
-    dammy_json = json.dumps(menu_dict)
     # json= 引数を使うことで、ヘッダに applicaton/json が含まれる
     res = requests.post(url, json=menu_dict)
 

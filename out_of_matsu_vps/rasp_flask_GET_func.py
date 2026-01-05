@@ -1,5 +1,7 @@
 # ラズパイに入れる、rasp_html_cafe.htmlにreturnするflask関数
 
+import requests
+import json
 from flask import Flask, json, request, render_template
 from dataclasses import dataclass
 
@@ -32,3 +34,30 @@ def page_menu():
         "templates/rasp_html_cafe.html",
         menu_row = menu_row
     )
+
+
+# 偽の齋藤VPSからGETリクエスト
+
+# 斎藤VPSへのURL
+url_saitoVPS = "http://162.43.43.163:8080"
+
+
+def get_menu(url):
+    res = requests.get(url_saitoVPS)
+    data = res.json()
+
+    print("\nステータスコード\n")
+    print(res.status_code)
+
+    print("\nレスポンス本文\n")
+    print(res.text)
+
+    latest_menu = data["menus"]
+    return latest_menu
+
+
+def main():
+    print("\nGETを投げます\n")
+    get_menu(url_saitoVPS)
+
+main()

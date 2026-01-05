@@ -1,3 +1,14 @@
+〜それぞれのURL〜
+斎藤VPS http://162.43.43.163:8080
+
+松本VM
+スマホ等からのJSONのPOSTを受けるURL（Tailscale版）：
+http://100.122.164.48:5000/menu_post
+100,122,164,48はTailscale IP
+
+献立表のJSONのGETを受けるURL（IPv6版）：
+http://[2600:1900:4001:79b::]:5000/menu_get
+
 
 〜松本VPSでやること〜
 ・スマホからのPOSTを受け取る
