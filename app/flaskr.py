@@ -5,14 +5,14 @@ from flask import Flask, request, jsonify, Response
 import requests
 from pathlib import Path
 import json
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 
 """
 必要なURLや、このファイルからの相対パス設定用
 """
 # 斎藤VPS（ラズパイと通信するVPS）のURL
-url_saitoVPS = "http://162.43.43.163:8080"
+url_saitoVPS = "http://162.43.43.163:8080/cafe"
 # url_saitoVPS = "http://127.0.0.1:5001/cafe/menu" 
 
 # このapp.pyのパス。.resolveで絶対パスにする
@@ -152,7 +152,7 @@ def receive_menu_json():
     latest_data_bytes = request.get_data()
 
     # historyフォルダ内にバックアップ
-    now = datetime.now()
+    now = datetime.now(timezone(timedelta(hours=9)))
     if not save_latest(now, latest_data_bytes):
         return jsonify({"matsu_vps_ok":False, "error":"not saved"})
     
@@ -195,7 +195,7 @@ def send_menu_json():
 メイン関数
 """
 def main():
-    app.run(host="0.0.0.0", port=5050)
+    app.run(host="::", port=8080)
 
 """
 メイン関数実行
