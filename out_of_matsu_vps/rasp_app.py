@@ -103,6 +103,9 @@ def page3():
                 "date": cafe_data.get("generated_at","")
             }
         ]
+    
+    # 日付順にメニューを並べ替える
+    menu_row = sorted(menu_row, key=lambda x: x.get("date", "3000-01-01"))
 
     return render_template(
         html_url_3,
