@@ -1,4 +1,5 @@
-# 松本VMに入れる、初回/更新時に venv 作成＋pip install -r requirements.txt
+# /etc/systemd/system/matsu_setup.service
+# 松本VM：初回/更新時に venv 作成 + pip install -r requirements.txt を実行する oneshot
 
 [Unit]
 Description=Matsu VM setup (create venv and install python deps)
@@ -11,19 +12,13 @@ User=e231238
 WorkingDirectory=/home/e231238/3ETU/matsu_temp_box
 Environment=PYTHONUNBUFFERED=1
 
-# 既に .venv があれば作り直さない（必要なら手動で消して作り直す）
-# ExecStartでコマンドを実行していく
-ExecStart=/bin/bash -lc '\
-  set -euo pipefail; \
-  cd /home/e231238/3ETU/matsu_temp_box; \
-  if [ ! -d ".venv" ]; then python3 -m venv .venv; fi; \
-  . .venv/bin/activate; \
-  python -m pip install -U pip wheel setuptools; \
-  pip install -r requirements.txt \
-'
-ここで bash に渡すコマンド文字列が終わる。
+# pip install が長引く可能性があるので、必要なら延長
+TimeoutStartSec=15min
 
-# 実行後にactive扱いとすることで、他のコマンドからセットアップ済みだと分かる
+# なるべく壊れにくい1行実行に寄せる（複雑化したらsetup.sh化推奨）
+ExecStart=/bin/bash -lc 'set -euo pipefail; cd /home/e231238/3ETU/matsu_temp_box; if [ ! -d ".venv" ]; then python3 -m venv .venv; fi; . .venv/bin/activate; python -m pip install -U pip wheel setuptools; pip install -r requirements.txt'
+
+# 実行後も「セットアップ済み(active)」として扱う
 RemainAfterExit=yes
 
 [Install]

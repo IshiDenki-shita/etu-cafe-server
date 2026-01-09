@@ -1,4 +1,6 @@
-# Flask を常駐起動（起動前に(A)を必ず実行）
+# /etc/systemd/system/matsu_flask.service
+# Flask を常駐起動（matsu_setup.service 完了後に起動）
+# ポートは flaskr.py 側で 8080 にしておく
 
 [Unit]
 Description=Matsu Flask receiver (flaskr.py)
@@ -8,26 +10,23 @@ Requires=matsu_setup.service
 After=matsu_setup.service
 
 [Service]
-# ExecStart で起動したプロセスがそのまま常駐するタイプ。
 Type=simple
-
-# root ではなく e231238 ユーザー権限。history への書き込みなどがユーザー所有になり、権限事故が起きにくい。
 User=e231238
-
-# 起動時のカレントディレクトリを app にする。
 WorkingDirectory=/home/e231238/3ETU/matsu_temp_box/app
-
-# なんかログを見やすくするらしい
 Environment=PYTHONUNBUFFERED=1
 
-# 実際にflaskr.pyを起動するコマンド
+# venv の python で flaskr.py を起動
 ExecStart=/home/e231238/3ETU/matsu_temp_box/.venv/bin/python /home/e231238/3ETU/matsu_temp_box/app/flaskr.py
 
-# プロセスが落ちたら常に再起動する。
+# 異常終了時のみ再起動（Ctrl+C 等の手動停止は通常ここでは起きない想定）
 Restart=on-failure
-
-# 再起動まで3秒待つ
 RestartSec=3
+
+# systemd 側で強制終了する時の猶予
+TimeoutStopSec=10
+
+# 予期せぬ多重起動を避けたい場合の保険（任意）
+# ExecStartPre=/usr/bin/bash -lc 'if ss -lntp | grep -q ":8080"; then echo "Port 8080 already in use"; exit 1; fi'
 
 [Install]
 WantedBy=multi-user.target
