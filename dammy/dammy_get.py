@@ -3,8 +3,8 @@
 import requests
 
 # 松本VPSへのURL
-url = "http://100.122.164.48:5000/menu_get"
-# url = "http://127.0.0.1:5000/menu_get"
+url = "http://100.122.164.48:8080/menu_get"
+# url = "http://127.0.0.1:8080/menu_get"
 
 
 def get_dammy_menu(url):

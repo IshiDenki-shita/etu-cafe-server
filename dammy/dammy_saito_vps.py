@@ -38,6 +38,6 @@ def send_to_rasp():
 
 
 def main():
-    app.run(host="127.0.0.1", debug=True, port=5001)
+    app.run(host="127.0.0.1", debug=True, port=8080)
 
 main()

@@ -50,17 +50,20 @@ def fetch_loop():
             r.raise_for_status()
             data_dict = r.json() # JSONがdictになる
             print("\n\nサーバーへのアクセス成功!!\n\n")
-            print(data_dict)
 
         except requests.RequestException as e:
             print("\n\nあかーん_リクエストでエラー発生!!!!!!!!!!\n\n")
             print(e)
             continue
+        except ValueError as e:
+            print("\n\nあかーん_GETしたJSONがおかしい!!!!!!!!!!\n\n")
+            print(e)
+            continue
 
         with data_lock:
-            data.timetable = data_dict["timetable"]
-            data.train = data_dict["train"]
-            data.cafe = data_dict["cafe"]
+            data.timetable = data_dict.get("timetable", {})
+            data.train = data_dict.get("train", {})
+            data.cafe = data_dict.get("cafe", {})
 
 """
 main関数
@@ -90,7 +93,16 @@ def page2():
 def page3():
     with data_lock: # 代入中に値が変更されないようロック
         cafe_data = data.cafe
-    menu_row = cafe_data["menus"]
+    menu_row = cafe_data.get("menus", [])
+
+    if not menu_row:
+        menu_row = [
+            {
+                "name": "最新情報はありません",
+                "price": 0,
+                "date": cafe_data.get("generated_at","")
+            }
+        ]
 
     return render_template(
         html_url_3,

@@ -128,6 +128,9 @@ def post_to_saito():
     except requests.exceptions.RequestException as e:
         print("\nあかーん 斎藤VPSへのpost失敗")
         print(e)
+        return False
+    
+    return True
 
 """
 POSTを貰ってデータを格納する関数
@@ -157,7 +160,9 @@ def receive_menu_json():
         return jsonify({"matsu_vps_ok":False, "error":"not saved"})
     
     # 最新のバックアップを斎藤VPSに転送
-    post_to_saito()
+    posted = post_to_saito()
+    if not posted:
+        return jsonify({"matsu_VPS_received":False,"error":"post to saito failed"})
 
     return jsonify({"matsu_VPS_received":True}) , 200
 
