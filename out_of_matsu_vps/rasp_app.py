@@ -13,7 +13,7 @@ import threading
 色々なグローバル変数
 """
 # GETしに行く齋藤VPSのURL
-url_saitoVPS = "http://162.43.43.163:8080" # URLの階層構造は未定
+url_saitoVPS = "http://162.43.43.163:8080/board" # URLの階層構造は未定
 
 # html_url
 html_url_1 = "page1.html"
