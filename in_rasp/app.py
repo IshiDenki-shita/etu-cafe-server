@@ -13,7 +13,7 @@ import threading
 色々なグローバル変数
 """
 # GETしに行く齋藤VPSのURL
-url_saitoVPS = "http://162.43.43.163:8080/board" # URLの階層構造は未定
+url_saitoVPS = "http://162.43.43.163:8080/api/v1/board" # URLの階層構造は未定
 
 # html_url
 html_url_1 = "page1.html"
@@ -49,7 +49,7 @@ def fetch_loop():
             r = requests.get(url_saitoVPS ,timeout=5)
             r.raise_for_status()
             data_dict = r.json() # JSONがdictになる
-            print("\n\nサーバーへのアクセス成功!!\n\n")
+            print("\nサーバーへのアクセス成功!!\n")
 
         except requests.RequestException as e:
             print("\n\nあかーん_リクエストでエラー発生!!!!!!!!!!\n\n")
@@ -100,7 +100,7 @@ def page3():
             {
                 "name": "最新情報はありません",
                 "price": 0,
-                "date": cafe_data.get("generated_at","")
+                "date": cafe_data.get("generated_at","取得できませんでした")
             }
         ]
     

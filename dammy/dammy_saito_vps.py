@@ -8,7 +8,7 @@ app = Flask(__file__)
 """
 松本VMからのPOSTリクエストを受ける機能
 """
-@app.post("/cafe/menu")
+@app.post("/api/v1/cafe")
 def receive_menu_json():
     latest_data = request.get_data()
     latest_dict = json.loads(latest_data)
@@ -31,7 +31,7 @@ dammy_dict = {
     }
 }
 
-@app.get("/rasp_get")
+@app.get("/board")
 def send_to_rasp():
     print("\n\nラズパイからGETリクエストが来ました。\n")
     return jsonify(dammy_dict)

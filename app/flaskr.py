@@ -12,8 +12,8 @@ from datetime import datetime, timezone, timedelta
 必要なURLや、このファイルからの相対パス設定用
 """
 # 斎藤VPS（ラズパイと通信するVPS）のURL
-url_saitoVPS = "http://162.43.43.163:8080/cafe"
-# url_saitoVPS = "http://127.0.0.1:5001/cafe/menu" 
+url_saitoVPS = "http://162.43.43.163:8080/api/v1/cafe"
+# url_saitoVPS = "http://127.0.0.1:8080/api/v1/cafe"
 
 # このapp.pyのパス。.resolveで絶対パスにする
 path_HERE = Path(__file__).resolve()
@@ -130,6 +130,12 @@ def post_to_saito():
         print(e)
         return False
     
+    if not res.ok:  # 200-399以外
+        print("\nあかーん: 斎藤VPSがエラーを返した")
+        print(res.status_code)
+        print(res.text)
+        return False
+    
     return True
 
 """
@@ -141,14 +147,14 @@ def receive_menu_json():
     ct = request.headers.get("Content-Type", "")
     if "application/json" not in ct:
         return (
-            jsonify({"ok": False, "error": "Content-Type must be application/json"}),
+            jsonify({"matsu_vps_received": False, "error": "Content-Type must be application/json"}),
             415,
         )
 
     # JSONとしてパース（壊れてたら None）
     parsed = request.get_json(silent=True)
     if parsed is None:
-        return jsonify({"matsu_vps_ok": False, "error": "Invalid JSON"}), 400
+        return jsonify({"matsu_vps_received": False, "error": "Invalid JSON"}), 400
 
     # postで受け取ったデータをGET待ちにするための箱
     global latest_data_bytes
@@ -157,14 +163,17 @@ def receive_menu_json():
     # historyフォルダ内にバックアップ
     now = datetime.now(timezone(timedelta(hours=9)))
     if not save_latest(now, latest_data_bytes):
-        return jsonify({"matsu_vps_ok":False, "error":"not saved"})
-    
+        return jsonify({"matsu_vps_received": False, "error": "not saved"})
+
     # 最新のバックアップを斎藤VPSに転送
     posted = post_to_saito()
     if not posted:
-        return jsonify({"matsu_VPS_received":False,"error":"post to saito failed"}), 400
+        return (
+            jsonify({"matsu_vps_received": True, "error": "post to saito failed"}),
+            400,
+        )
 
-    return jsonify({"matsu_VPS_received":True}) , 200
+    return jsonify({"matsu_VPS_received":True, "error":"No error"}) , 200
 
 """
 斎藤VPSからのGETリクエストに返信（最新バックアップを返す）
