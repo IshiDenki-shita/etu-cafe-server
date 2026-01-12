@@ -1,42 +1,126 @@
+<!-- page3_patternC.html : 1メニューだけ表示（超大型・遠目優先） -->
 <!doctype html>
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="refresh" content="10" />
-    <title>食堂メニュー</title>
+    <!-- app.pyを変更しない前提：データ更新のために自動リロード -->
+    <meta http-equiv="refresh" content="20" />
+    <title>食堂メニュー（1件表示）</title>
     <style>
-      body { font-family: sans-serif; margin: 24px; }
-      h1 { margin: 0 0 12px; }
-      table { border-collapse: collapse; width: 100%; }
-      th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-      th { background: #f3f3f3; }
-      .empty { color: #666; }
+      :root{
+        --bg:#ffffff;
+        --fg:#111;
+        --muted:#666;
+        --line:#e6e6e6;
+      }
+      body{
+        margin:0;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        background:var(--bg);
+        color:var(--fg);
+        height:100vh;
+        display:flex;
+      }
+      .wrap{
+        flex:1;
+        padding: 40px 48px;
+        display:flex;
+        flex-direction:column;
+        gap: 18px;
+      }
+      header{
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-end;
+        gap:16px;
+        border-bottom: 3px solid var(--line);
+        padding-bottom: 14px;
+      }
+      h1{
+        margin:0;
+        font-size: 44px;
+        letter-spacing:.02em;
+      }
+      .meta{
+        text-align:right;
+        color:var(--muted);
+        font-size: 18px;
+        line-height: 1.4;
+        white-space: nowrap;
+      }
+
+      .card{
+        flex:1;
+        border: 4px solid var(--line);
+        border-radius: 26px;
+        padding: 34px 36px;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        gap: 18px;
+      }
+      .date{
+        font-size: 34px;
+        font-weight: 800;
+        color: var(--muted);
+        letter-spacing:.02em;
+        overflow-wrap:anywhere;
+      }
+      .name{
+        font-size: 86px;     /* ここが主役：遠目で読める大きさ */
+        font-weight: 900;
+        line-height: 1.05;
+        letter-spacing: .01em;
+        overflow-wrap:anywhere;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;      /* 文字が多いときは最大3行 */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .empty{
+        flex:1;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size: 64px;
+        font-weight: 850;
+        color: var(--muted);
+        padding: 24px;
+        text-align:center;
+      }
+
+      /* 画面が小さい場合でも「とにかく大きく」 */
+      @media (max-width: 900px){
+        .wrap{ padding: 28px 24px; }
+        h1{ font-size: 34px; }
+        .date{ font-size: 26px; }
+        .name{ font-size: 62px; -webkit-line-clamp: 4; }
+      }
     </style>
   </head>
 
   <body>
-    <h1>食堂メニュー</h1>
+    <div class="wrap">
+      <header>
+        <h1>食堂メニュー</h1>
+        <div class="meta">
+          1件表示<br>
+          自動更新: 20秒
+        </div>
+      </header>
 
-    {% if menu_row and menu_row|length > 0 %}
-      <table>
-        <thead>
-          <tr>
-            <th>提供日</th>
-            <th>メニュー</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for m in menu_row %}
-            <tr>
-              <td>{{ m.date }}</td>
-              <td>{{ m.name }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p class="empty">メニューがありません。</p>
-    {% endif %}
+      {% if menu_row and menu_row|length > 0 %}
+        {# app.pyで日付順ソート済みなので、先頭を採用 #}
+        {% set m = menu_row[0] %}
+        <div class="card">
+          <div class="date">{{ m.date }}</div>
+          <div class="name">{{ m.name }}</div>
+        </div>
+      {% else %}
+        <div class="empty">メニューがありません</div>
+      {% endif %}
+    </div>
   </body>
 </html>

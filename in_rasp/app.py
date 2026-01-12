@@ -18,7 +18,7 @@ url_saitoVPS = "http://162.43.43.163:8080/api/v1/board" # URLの階層構造は�
 # html_url
 html_url_1 = "page1.html"
 html_url_2 = "page2.html"
-html_url_3 = "page3.html" # 食堂の特別メニューを表示
+html_url_3 = "page3D.html" # 食堂の特別メニューを表示
 
 # Flaskアプリケーションのインスタンスを作成
 app = Flask(__name__)
