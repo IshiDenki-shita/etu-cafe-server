@@ -162,7 +162,7 @@ def receive_menu_json():
     # 最新のバックアップを斎藤VPSに転送
     posted = post_to_saito()
     if not posted:
-        return jsonify({"matsu_VPS_received":False,"error":"post to saito failed"})
+        return jsonify({"matsu_VPS_received":False,"error":"post to saito failed"}), 400
 
     return jsonify({"matsu_VPS_received":True}) , 200
 
@@ -200,7 +200,7 @@ def send_menu_json():
 メイン関数
 """
 def main():
-    app.run(host="::", port=8080)
+    app.run(host="0.0.0.0", port=8080)
 
 """
 メイン関数実行
