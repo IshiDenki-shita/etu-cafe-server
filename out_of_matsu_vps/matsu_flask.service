@@ -11,12 +11,12 @@ After=matsu_setup.service
 
 [Service]
 Type=simple
-User=e231238
-WorkingDirectory=/home/e231238/3ETU/matsu_temp_box/app
+User=root
+WorkingDirectory=/root/3ETU/matsu_temp_box/app
 Environment=PYTHONUNBUFFERED=1
 
 # venv の python で flaskr.py を起動
-ExecStart=/home/e231238/3ETU/matsu_temp_box/.venv/bin/python /home/e231238/3ETU/matsu_temp_box/app/flaskr.py
+ExecStart=/root/3ETU/matsu_temp_box/.venv/bin/python /root/3ETU/matsu_temp_box/app/flaskr.py
 
 # 異常終了時のみ再起動（Ctrl+C 等の手動停止は通常ここでは起きない想定）
 Restart=on-failure

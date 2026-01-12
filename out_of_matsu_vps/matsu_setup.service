@@ -8,15 +8,15 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-User=e231238
-WorkingDirectory=/home/e231238/3ETU/matsu_temp_box
+User=root
+WorkingDirectory=/root/3ETU/matsu_temp_box
 Environment=PYTHONUNBUFFERED=1
 
 # pip install が長引く可能性があるので、必要なら延長
 TimeoutStartSec=15min
 
 # なるべく壊れにくい1行実行に寄せる（複雑化したらsetup.sh化推奨）
-ExecStart=/bin/bash -lc 'set -euo pipefail; cd /home/e231238/3ETU/matsu_temp_box; if [ ! -d ".venv" ]; then python3 -m venv .venv; fi; . .venv/bin/activate; python -m pip install -U pip wheel setuptools; pip install -r requirements.txt'
+ExecStart=/bin/bash -lc 'set -euo pipefail; cd /root/3ETU/matsu_temp_box; if [ ! -d ".venv" ]; then python3 -m venv .venv; fi; . .venv/bin/activate; python -m pip install -U pip wheel setuptools; pip install -r requirements.txt'
 
 # 実行後も「セットアップ済み(active)」として扱う
 RemainAfterExit=yes
