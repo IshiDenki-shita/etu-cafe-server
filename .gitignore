@@ -1,9 +1,11 @@
 .DS_Store
 
+dammy_post/
+
 history/
 
-matsu_vps_venv/
-
 in_rasp/
+
+matsu_vps_venv/
 
 tempCodeRunnerFile.py
