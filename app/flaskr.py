@@ -209,7 +209,7 @@ def send_menu_json():
 メイン関数
 """
 def main():
-    app.run(host="0.0.0.0", port=8080)
+    app.run(host="0.0.0.0", port=8081)
 
 """
 メイン関数実行

@@ -18,8 +18,10 @@ TimeoutStartSec=15min
 # なるべく壊れにくい1行実行に寄せる（複雑化したらsetup.sh化推奨）
 ExecStart=/bin/bash -lc 'set -euo pipefail; cd /root/3ETU/matsu_temp_box; if [ ! -d ".venv" ]; then python3 -m venv .venv; fi; . .venv/bin/activate; python -m pip install -U pip wheel setuptools; pip install -r requirements.txt'
 
-# 実行後も「セットアップ済み(active)」として扱う
+# → 他サービスが Requires=matsu_setup.service しているとき、「一度成功したセットアップが完了済み」扱いにできる。
 RemainAfterExit=yes
 
+# 自動起動の本懐。systemctl enableすると自動起動するようになる。
 [Install]
+# .target側にこのサービスが必要だと教える
 WantedBy=multi-user.target
