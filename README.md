@@ -34,4 +34,4 @@ matsu_vps_cafe/history/<バックアップした日付>/<バックアップし�
 
 
 〜VPSが起動している時間〜
-未定
+always

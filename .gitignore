@@ -6,6 +6,6 @@ history/
 
 in_rasp/
 
-matsu_vps_venv/
+.venv/
 
 tempCodeRunnerFile.py
