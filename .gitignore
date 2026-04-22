@@ -8,4 +8,6 @@ in_rasp/
 
 .venv/
 
+.env
+
 tempCodeRunnerFile.py

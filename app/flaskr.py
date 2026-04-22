@@ -1,59 +1,71 @@
 """
 色々なインポート
 """
-from flask import Flask, request, jsonify, Response
-import requests
-from pathlib import Path
-import json
+
 from datetime import datetime, timezone, timedelta
+import json
+from pathlib import Path
+import requests
+import os
+import sys
+from dataclasses import dataclass
+from dotenv import load_dotenv
+from flask import Flask, request, jsonify, Response
 
 
-"""
-必要なURLや、このファイルからの相対パス設定用
-"""
-# 斎藤VPS（ラズパイと通信するVPS）のURL
-url_saitoVPS = "http://162.43.43.163:8080/api/v1/cafe"
-# url_saitoVPS = "http://127.0.0.1:8080/api/v1/cafe"
+@dataclass
+class Config_env:
+    def __init__(self):
+        """
+        環境変数読み込み
+        """
+        load_dotenv()
+        self.app = Flask(__name__)
 
-# このapp.pyのパス。.resolveで絶対パスにする
-path_HERE = Path(__file__).resolve()
-# バックアップ用のフォルダ history のパスを格納。 matsu_vps_cafe/historyにバックアップフォルダ作りたい。
-path_history = path_HERE.parent.parent / 'history'
-# history 自体が無いと日付フォルダ作成が失敗するので、親を先に作る
-path_history.mkdir(parents=True, exist_ok=True)
+        # --- アプリ設定 ---
+        self.ENV = os.getenv("FLASK_ENV", "development")
+        self.DEBUG = os.getenv("DEBUG", "False") == "True"
+        self.HOST = os.getenv("HOST", "0.0.0.0")
+        self.PORT = int(os.getenv("PORT", 5000))
+        self.BASE_URL = os.getenv("APP_URL")
+
+        # 送受信用
+        self.PHONE_AUTH_TOKEN = os.getenv("PHONE_AUTH_TOKEN")  # スマホの認証
+        self.SAITO_VPS_URL = os.getenv("SAITO_VPS_URL")  # 斎藤VMへのURL
+        assert self.SAITO_VPS_URL is not None
+
+        # 保存用
+        self.PHOTOS_DIR = os.getenv("PHOTOS_DIR", "/tmp")  # 画像保存先
+        self.HISTORY_DIR = os.getenv("HISTORY_DIR")
+        assert self.HISTORY_DIR is not None
 
 
-"""
-flaskr.pyを通して使う変数など
-"""
-# flaskサーバー本体
 app = Flask(__name__)
+cfg = Config_env()
 
-# 松本VMからPOSTされたデータを格納
 latest_data_bytes = None
+history_dir = Path(cfg.HISTORY_DIR)
+history_dir.mkdir(parents=True, exist_ok=True)
 
 
-"""
-受け取ったjsonをhistoryフォルダにバックアップ
-"""
 def save_latest(post_time, latest_data):
     # 一日ごとに分けてバックアップフォルダを作成
     folder_name = post_time.strftime("%Y-%m-%d")
-    folder_path = path_history / folder_name
+    folder_path = history_dir / folder_name
 
     try:
         folder_path.mkdir(exist_ok=True)
     except Exception as e:
         print(e)
-        print(f'{folder_name} フォルダを作れませんでした。')
+        print(f"{folder_name} フォルダを作れませんでした。")
 
     # そのフォルダの中にファイルを作る
     file_name = f"{folder_name}_{post_time.strftime('%H%M%S')}.json"
-    file_path = path_history / folder_name / file_name
+    file_path = history_dir / folder_name / file_name
     with open(
         file_path,
-        'w',
-        encoding='utf-8',
+        "w",
+        encoding="utf-8",
     ) as f:
         # 一旦辞書にする
         try:
@@ -65,12 +77,10 @@ def save_latest(post_time, latest_data):
         # その辞書を書式設定しながらjsonに戻す。
         latest_save = json.dumps(latest_dict, ensure_ascii=False, indent=2)
         f.write(latest_save)
-    
+
     return True
 
-"""
-post/被getするときに使う、最新のバックアップを探す関数
-"""
+
 def _find_latest_backup_file():
     """
     history配下から「最新のバックアップjson」を探して返す。
@@ -78,12 +88,9 @@ def _find_latest_backup_file():
       - 日付フォルダ（YYYY-MM-DD）を新しい順に見る
       - その中の *.json を更新時刻(newest)順に見て最初の1件
     """
-    if not path_history.exists():
-        # 流石にそんなことはないやろ
-        return None
 
     day_dirs = sorted(
-        [p for p in path_history.iterdir() if p.is_dir()],
+        [p for p in history_dir.iterdir() if p.is_dir()],
         key=lambda p: p.name,  # YYYY-MM-DD の文字列ソートで時系列になる
         reverse=True,
     )
@@ -99,9 +106,6 @@ def _find_latest_backup_file():
     return None
 
 
-"""
-最新バックアップを斎藤VPSにpostする関数
-"""
 def post_to_saito():
     # バックアップ内の最新のjsonを斎藤VPSへpostする
     latest_file = _find_latest_backup_file()
@@ -118,9 +122,16 @@ def post_to_saito():
 
     header = {"Content-Type": "application/json"}
     try:
-        res = requests.post(
-            url_saitoVPS, data=payload_text.encode("utf-8"), headers=header, timeout=5
-        )
+        if cfg.SAITO_VPS_URL is not None:
+            res = requests.post(
+                cfg.SAITO_VPS_URL,
+                data=payload_text.encode("utf-8"),
+                headers=header,
+                timeout=5,
+            )
+        else:
+            print(f"斎藤VPSのURLに問題あり")
+            return False
         print("\n齋藤VPSのPOSTに対するレスポンスのステータスコード\n")
         print(res.status_code)
         print("\n齋藤VPSのPOSTに対するレスポンスのテキスト\n")
@@ -129,25 +140,28 @@ def post_to_saito():
         print("\nあかーん 斎藤VPSへのpost失敗")
         print(e)
         return False
-    
+
     if not res.ok:  # 200-399以外
         print("\nあかーん: 斎藤VPSがエラーを返した")
         print(res.status_code)
         print(res.text)
         return False
-    
+
     return True
 
-"""
-POSTを貰ってデータを格納する関数
-"""
+
 @app.post("/menu_post")
 def receive_menu_json():
     # Content-Type がJSONか確認（厳密にしたい場合）
     ct = request.headers.get("Content-Type", "")
     if "application/json" not in ct:
         return (
-            jsonify({"matsu_vps_received": False, "error": "Content-Type must be application/json"}),
+            jsonify(
+                {
+                    "matsu_vps_received": False,
+                    "error": "Content-Type must be application/json",
+                }
+            ),
             415,
         )
 
@@ -173,11 +187,14 @@ def receive_menu_json():
             400,
         )
 
-    return jsonify({"matsu_VPS_received":True, "error":"No error"}) , 200
+    return jsonify({"matsu_VPS_received": True, "error": "No error"}), 200
+
 
 """
 斎藤VPSからのGETリクエストに返信（最新バックアップを返す）
 """
+
+
 @app.get("/menu_get")
 def send_menu_json():
     # 最新バックアップのパス
@@ -190,7 +207,10 @@ def send_menu_json():
     except Exception as e:
         print("あかーん: 最新バックアップの読み込み失敗")
         print(e)
-        return jsonify({"matsu_VPS_has_data": False, "error": "read backup failed"}), 500
+        return (
+            jsonify({"matsu_VPS_has_data": False, "error": "read backup failed"}),
+            500,
+        )
 
     # 念のためJSONとして妥当かチェック（壊れてたら500）
     try:
@@ -208,11 +228,5 @@ def send_menu_json():
 """
 メイン関数
 """
-def main():
-    app.run(host="0.0.0.0", port=8081)
-
-"""
-メイン関数実行
-"""
 if __name__ == "__main__":
-    main()
+    app.run(host=cfg.HOST, port=cfg.PORT, debug=cfg.DEBUG)
