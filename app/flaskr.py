@@ -4,45 +4,41 @@ from pathlib import Path
 import requests
 import os
 from dataclasses import dataclass
+import threading
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify, Response
+from flask import Flask, jsonify, request, Response
 
 
-# =========================
-# 環境変数ユーティリティ
-# =========================
 def require_env(key: str) -> str:
     val = os.getenv(key)
     if val is None:
-        raise RuntimeError(f"環境変数 {key} が未設定")
+        raise RuntimeError(f"環境変数 {key} が未定義")
     return val
 
 
-# =========================
-# 設定クラス
-# =========================
 @dataclass(frozen=True)
-class Config:
+class Config_env:
     ENV: str
     DEBUG: bool
     HOST: str
     PORT: int
-    BASE_URL: str
+    APP_URL: str
     PHONE_AUTH_TOKEN: str
     SAITO_VPS_URL: str
     HISTORY_DIR: str
     PHOTOS_DIR: str
 
     @staticmethod
-    def load() -> "Config":
+    def load() -> "Config_env":
+
         load_dotenv()
 
-        return Config(
+        return Config_env(
             ENV=os.getenv("FLASK_ENV", "development"),
             DEBUG=os.getenv("DEBUG", "False") == "True",
             HOST=os.getenv("HOST", "0.0.0.0"),
             PORT=int(os.getenv("PORT", "5000")),
-            BASE_URL=require_env("APP_URL"),
+            APP_URL=require_env("APP_URL"),
             PHONE_AUTH_TOKEN=require_env("PHONE_AUTH_TOKEN"),
             SAITO_VPS_URL=require_env("SAITO_VPS_URL"),
             HISTORY_DIR=require_env("HISTORY_DIR"),
@@ -50,21 +46,16 @@ class Config:
         )
 
 
-# =========================
-# 初期化
-# =========================
-cfg = Config.load()
+cfg = Config_env.load()
 app = Flask(__name__)
 
 history_dir = Path(cfg.HISTORY_DIR)
 history_dir.mkdir(parents=True, exist_ok=True)
 
 latest_data_bytes: bytes | None = None
+data_lock = threading.Lock()
 
 
-# =========================
-# 保存処理
-# =========================
 def save_latest(post_time: datetime, latest_data: bytes) -> bool:
     folder_name = post_time.strftime("%Y-%m-%d")
     folder_path = history_dir / folder_name
@@ -76,7 +67,8 @@ def save_latest(post_time: datetime, latest_data: bytes) -> bool:
 
     try:
         latest_dict = json.loads(latest_data)
-    except Exception:
+    except Exception as e:
+        print(f"セーブ時にJSONを読み込めませんでした。\n{e}")
         return False
 
     with open(file_path, "w", encoding="utf-8") as f:
@@ -85,10 +77,7 @@ def save_latest(post_time: datetime, latest_data: bytes) -> bool:
     return True
 
 
-# =========================
-# 最新ファイル取得
-# =========================
-def _find_latest_backup_file():
+def find_latest_backup_file():
     day_dirs = sorted(
         [p for p in history_dir.iterdir() if p.is_dir()],
         key=lambda p: p.name,
@@ -98,7 +87,7 @@ def _find_latest_backup_file():
     for d in day_dirs:
         files = sorted(
             d.glob("*.json"),
-            key=lambda p: p.stat().st_mtime,
+            key=lambda p: p.name,
             reverse=True,
         )
         if files:
@@ -107,20 +96,19 @@ def _find_latest_backup_file():
     return None
 
 
-# =========================
-# VPS送信
-# =========================
 def post_to_saito() -> bool:
-    latest_file = _find_latest_backup_file()
+    latest_file = find_latest_backup_file()
     if latest_file is None:
+        print(f"斎藤VPSの送信時に最新バックアップを取得できませんでした。")
         return False
 
     try:
         payload_text = latest_file.read_text(encoding="utf-8")
-    except Exception:
+    except Exception as e:
+        print(f"最新バックアップのJSONを読めませんでした\n{e}")
         return False
 
-    url = cfg.SAITO_VPS_URL  # ← 型は確定str
+    url = cfg.SAITO_VPS_URL
 
     try:
         res = requests.post(
@@ -129,16 +117,14 @@ def post_to_saito() -> bool:
             headers={"Content-Type": "application/json"},
             timeout=5,
         )
+
     except requests.RequestException:
         return False
 
     return res.ok
 
 
-# =========================
-# POST API
-# =========================
-@app.post("/menu_post")
+@app.post("/menu_post/pc")
 def receive_menu_json():
     if "application/json" not in request.headers.get("Content-Type", ""):
         return jsonify({"error": "Content-Type must be application/json"}), 415
@@ -147,12 +133,13 @@ def receive_menu_json():
     if parsed is None:
         return jsonify({"error": "Invalid JSON"}), 400
 
-    global latest_data_bytes
-    latest_data_bytes = request.get_data()
+    with data_lock:
+        global latest_data_bytes
+        latest_data_bytes = request.get_data()
 
     now = datetime.now(timezone(timedelta(hours=9)))
 
-    if latest_data_bytes is None or not save_latest(now, latest_data_bytes):
+    if latest_data_bytes is None or not save_latest(now, latest_data=latest_data_bytes):
         return jsonify({"error": "save failed"}), 500
 
     if not post_to_saito():
@@ -161,26 +148,35 @@ def receive_menu_json():
     return jsonify({"ok": True}), 200
 
 
-# =========================
-# GET API
-# =========================
+@app.post("/menu_post/ml")
+def receive_menu_img():
+    if "multipart/form-data" not in request.headers.get("Content-Type", ""):
+        print("画像ではないデータが送られました。")
+        return jsonify({"error": "Content-Type must be multipart/form-data"}), 415
+
+    with data_lock:
+        global latest_data_bytes
+        latest_data_bytes = request.get_data()
+
+    return jsonify({"ok": True}), 200
+
+
 @app.get("/menu_get")
 def send_menu_json():
-    latest_file = _find_latest_backup_file()
+    latest_file = find_latest_backup_file()
     if latest_file is None:
+        print(f"斎藤VPSからのGET時に最新バックアップを取得できませんでした。")
         return jsonify({"error": "no data"}), 404
 
     try:
         payload_text = latest_file.read_text(encoding="utf-8")
         json.loads(payload_text)
-    except Exception:
+    except Exception as e:
+        print(f"被GET時にJSONがおかしい")
         return jsonify({"error": "invalid data"}), 500
 
     return Response(payload_text, content_type="application/json")
 
 
-# =========================
-# 起動
-# =========================
 if __name__ == "__main__":
     app.run(host=cfg.HOST, port=cfg.PORT, debug=cfg.DEBUG)
