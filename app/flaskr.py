@@ -158,6 +158,14 @@ def receive_menu_img():
         global latest_data_bytes
         latest_data_bytes = request.get_data()
 
+    # 画像を所定のフォルダに保存
+    # 斎藤の画像分割ライブラリを呼び出す
+    # 機械学習のpythonファイルを呼び出す
+    try:
+        result = subprocess.run(
+            ["Python3", "app.py", str(split_diur)]
+        )
+
     return jsonify({"ok": True}), 200
 
 
