@@ -124,7 +124,7 @@ def post_to_saito() -> bool:
     return res.ok
 
 
-@app.post("/menu_post/pc")
+@app.post("/menu_post/json")
 def receive_menu_json():
     if "application/json" not in request.headers.get("Content-Type", ""):
         return jsonify({"error": "Content-Type must be application/json"}), 415
@@ -148,7 +148,7 @@ def receive_menu_json():
     return jsonify({"ok": True}), 200
 
 
-@app.post("/menu_post/ml")
+@app.post("/menu_post/photo")
 def receive_menu_img():
     if "multipart/form-data" not in request.headers.get("Content-Type", ""):
         print("画像ではないデータが送られました。")
