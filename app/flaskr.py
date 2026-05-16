@@ -37,7 +37,7 @@ class Config_env:
             ENV=os.getenv("FLASK_ENV", "development"),
             DEBUG=os.getenv("DEBUG", "False") == "True",
             HOST=os.getenv("HOST", "0.0.0.0"),
-            PORT=int(os.getenv("PORT", "5000")),
+            PORT=int(os.getenv("PORT", "8081")),
             APP_URL=require_env("APP_URL"),
             PHONE_AUTH_TOKEN=require_env("PHONE_AUTH_TOKEN"),
             SAITO_VPS_URL=require_env("SAITO_VPS_URL"),

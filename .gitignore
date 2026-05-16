@@ -1,15 +1,6 @@
 .DS_Store
-
-dammy_post/
-
-history/
-
-in_rasp/
-
 .venv/
-
-temp_palette/
-
+dammy_post/
+history/
 .env
-
 tempCodeRunnerFile.py
