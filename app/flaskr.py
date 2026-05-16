@@ -162,9 +162,9 @@ def receive_menu_img():
     # 斎藤の画像分割ライブラリを呼び出す
     # 機械学習のpythonファイルを呼び出す
     try:
-        result = subprocess.run(
-            ["Python3", "app.py", str(split_diur)]
-        )
+        result = subprocess.run(["Python3", "app.py", str(split_diur)])
+    except:
+        raise RuntimeError("機械学習の起動時、或いは動作中にエラー発生")
 
     return jsonify({"ok": True}), 200
 
