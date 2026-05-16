@@ -3,6 +3,7 @@ from datetime import datetime, timezone, timedelta
 
 # 松本VPSへのURL
 url = "http://133.242.22.254:8081/menu_post/json"
+# url = "http://127.0.0.1:8081/menu_post/json"
 
 # JST(+09:00)のISO8601文字列を生成（例: 2026-01-05T12:34:56+09:00）
 JST = timezone(timedelta(hours=9))

@@ -140,10 +140,15 @@ def receive_menu_json():
     now = datetime.now(timezone(timedelta(hours=9)))
 
     if latest_data_bytes is None or not save_latest(now, latest_data=latest_data_bytes):
-        return jsonify({"error": "save failed"}), 500
+        return jsonify({"matsu_vps_alive": "true", "error": "save failed"}), 500
 
     if not post_to_saito():
-        return jsonify({"error": "post failed"}), 500
+        return (
+            jsonify(
+                {"matsu_vps_alive": "true", "error": "post to saito server failed"}
+            ),
+            500,
+        )
 
     return jsonify({"ok": True}), 200
 
@@ -152,7 +157,15 @@ def receive_menu_json():
 def receive_menu_img():
     if "multipart/form-data" not in request.headers.get("Content-Type", ""):
         print("画像ではないデータが送られました。")
-        return jsonify({"error": "Content-Type must be multipart/form-data"}), 415
+        return (
+            jsonify(
+                {
+                    "matsu_vps_alive": "true",
+                    "error": "Content-Type must be multipart/form-data",
+                }
+            ),
+            415,
+        )
 
     with data_lock:
         global latest_data_bytes
@@ -166,7 +179,7 @@ def receive_menu_img():
     except:
         raise RuntimeError("機械学習の起動時、或いは動作中にエラー発生")
 
-    return jsonify({"ok": True}), 200
+    return jsonify({"matsu_vps_alive": "true", "ok": True}), 200
 
 
 @app.get("/menu_get")
@@ -174,14 +187,14 @@ def send_menu_json():
     latest_file = find_latest_backup_file()
     if latest_file is None:
         print(f"斎藤VPSからのGET時に最新バックアップを取得できませんでした。")
-        return jsonify({"error": "no data"}), 404
+        return jsonify({"matsu_vps_alive": "true", "error": "no data"}), 404
 
     try:
         payload_text = latest_file.read_text(encoding="utf-8")
         json.loads(payload_text)
     except Exception as e:
         print(f"被GET時にJSONがおかしい")
-        return jsonify({"error": "invalid data"}), 500
+        return jsonify({"matsu_vps_alive": "true", "error": "invalid data"}), 500
 
     return Response(payload_text, content_type="application/json")
 

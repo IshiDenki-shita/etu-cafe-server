@@ -4,8 +4,6 @@ import requests
 
 # 松本VPSへのURL
 url = "http://133.242.22.254:8081/menu_get"
-# url = "http://210.131.216.51:22/menu_get"
-# url = "http://127.0.0.1:8080/menu_get"
 
 
 def get_dammy_menu(url):
@@ -20,7 +18,6 @@ def get_dammy_menu(url):
 
 def main():
     print("\nGETを投げます\n")
-
     get_dammy_menu(url)
 
 
