@@ -7,6 +7,8 @@ from dataclasses import dataclass
 import threading
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, Response
+import subprocess
+import re
 
 
 def require_env(key: str) -> str:
@@ -155,31 +157,69 @@ def receive_menu_json():
 
 @app.post("/menu_post/photo")
 def receive_menu_img():
-    if "multipart/form-data" not in request.headers.get("Content-Type", ""):
-        print("画像ではないデータが送られました。")
-        return (
-            jsonify(
-                {
-                    "matsu_vps_alive": "true",
-                    "error": "Content-Type must be multipart/form-data",
-                }
-            ),
-            415,
-        )
+    # トークン認証
+    token = request.headers.get("Auth-Token")
+    if token != cfg.PHONE_AUTH_TOKEN:
+        return jsonify({"error": "Unauthorized"}), 401
 
-    with data_lock:
-        global latest_data_bytes
-        latest_data_bytes = request.get_data()
+    # Content-Typeがmultipart/form-dataであるか確認
+    if request.mimetype != "multipart/form-data":
+        return jsonify({"error": "Unsupported Media Type. Expected multipart/form-data"}), 415
+
+    # リクエストファイルの存在確認
+    if not request.files:
+        return jsonify({"error": "No file provided"}), 400
+    
+    file = next(iter(request.files.values()))
+    
+    if file.filename == "":
+        return jsonify({"error": "Empty filename"}), 400
+
+    filename = file.filename
+
+    # ファイル名形式の検証 (例: don-20260529180000.jpeg)
+    pattern = r"^(don|men)-\d{14}\.(jpg|jpeg)$"
+    if not re.match(pattern, filename, flags=re.IGNORECASE):
+        return jsonify({"error": "Invalid filename format. Expected don- or men-yyyyMMddHHmmss.jpg or .jpeg"}), 400
+
+    # 拡張子の統一とプレフィックスの抽出
+    base_name = filename.rsplit('.', 1)[0]
+    new_filename = f"{base_name}.jpeg"
+    prefix = base_name.split('-')[0]
+
+    # 保存先ディレクトリの決定 (catched/YYYY-MM) と作成
+    jst = timezone(timedelta(hours=9))
+    now = datetime.now(jst)
+    month_str = now.strftime("%Y-%m")
+    save_dir = Path(cfg.PHOTOS_DIR) / "catched" / month_str
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    # 同一プレフィックスの古いファイルを削除
+    for existing_file in save_dir.glob(f"{prefix}-*.jpeg"):
+        try:
+            existing_file.unlink()
+        except OSError as e:
+            return jsonify({"error": f"Failed to delete old file: {e}"}), 500
+
+    # ファイルの保存
+    save_path = save_dir / new_filename
+    file.save(str(save_path))
+
+    return jsonify({
+        "message": "File saved successfully",
+        "saved_path": str(save_path)
+    }), 200
 
     # 画像を所定のフォルダに保存
     # 斎藤の画像分割ライブラリを呼び出す
     # 機械学習のpythonファイルを呼び出す
-    try:
-        result = subprocess.run(["Python3", "app.py", str(split_diur)])
-    except:
-        raise RuntimeError("機械学習の起動時、或いは動作中にエラー発生")
+    
+    # try:
+    #     result = subprocess.run(["python3", "app.py", str(split_dir)])
+    # except:
+    #     raise RuntimeError("機械学習の起動時、或いは動作中にエラー発生")
 
-    return jsonify({"matsu_vps_alive": "true", "ok": True}), 200
+    # return jsonify({"matsu_vps_alive": "true", "ok": True}), 200
 
 
 @app.get("/menu_get")
