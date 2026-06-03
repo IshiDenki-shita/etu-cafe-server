@@ -44,7 +44,7 @@ class Config_env:
             PHONE_AUTH_TOKEN=require_env("PHONE_AUTH_TOKEN"),
             SAITO_VPS_URL=require_env("SAITO_VPS_URL"),
             HISTORY_DIR=require_env("HISTORY_DIR"),
-            PHOTOS_DIR=os.getenv("PHOTOS_DIR", "/tmp"),
+            PHOTOS_DIR=os.getenv("PHOTOS_DIR", "/"),
         )
 
 
@@ -164,14 +164,17 @@ def receive_menu_img():
 
     # Content-Typeがmultipart/form-dataであるか確認
     if request.mimetype != "multipart/form-data":
-        return jsonify({"error": "Unsupported Media Type. Expected multipart/form-data"}), 415
+        return (
+            jsonify({"error": "Unsupported Media Type. Expected multipart/form-data"}),
+            415,
+        )
 
     # リクエストファイルの存在確認
     if not request.files:
         return jsonify({"error": "No file provided"}), 400
-    
+
     file = next(iter(request.files.values()))
-    
+
     if file.filename == "":
         return jsonify({"error": "Empty filename"}), 400
 
@@ -180,12 +183,19 @@ def receive_menu_img():
     # ファイル名形式の検証 (例: don-20260529180000.jpeg)
     pattern = r"^(don|men)-\d{14}\.(jpg|jpeg)$"
     if not re.match(pattern, filename, flags=re.IGNORECASE):
-        return jsonify({"error": "Invalid filename format. Expected don- or men-yyyyMMddHHmmss.jpg or .jpeg"}), 400
+        return (
+            jsonify(
+                {
+                    "error": "Invalid filename format. Expected don- or men-yyyyMMddHHmmss.jpg or .jpeg"
+                }
+            ),
+            400,
+        )
 
     # 拡張子の統一とプレフィックスの抽出
-    base_name = filename.rsplit('.', 1)[0]
+    base_name = filename.rsplit(".", 1)[0]
     new_filename = f"{base_name}.jpeg"
-    prefix = base_name.split('-')[0]
+    prefix = base_name.split("-")[0]
 
     # 保存先ディレクトリの決定 (catched/YYYY-MM) と作成
     jst = timezone(timedelta(hours=9))
@@ -205,21 +215,10 @@ def receive_menu_img():
     save_path = save_dir / new_filename
     file.save(str(save_path))
 
-    return jsonify({
-        "message": "File saved successfully",
-        "saved_path": str(save_path)
-    }), 200
-
-    # 画像を所定のフォルダに保存
-    # 斎藤の画像分割ライブラリを呼び出す
-    # 機械学習のpythonファイルを呼び出す
-    
-    # try:
-    #     result = subprocess.run(["python3", "app.py", str(split_dir)])
-    # except:
-    #     raise RuntimeError("機械学習の起動時、或いは動作中にエラー発生")
-
-    # return jsonify({"matsu_vps_alive": "true", "ok": True}), 200
+    return (
+        jsonify({"message": "File saved successfully", "saved_path": str(save_path)}),
+        200,
+    )
 
 
 @app.get("/menu_get")
