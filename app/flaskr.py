@@ -120,7 +120,8 @@ def post_to_saito() -> bool:
             timeout=5,
         )
 
-    except requests.RequestException:
+    except requests.RequestException as e:
+        print(f"斎藤サーバーへの送信で問題が発生しました。\n{e}")
         return False
 
     return res.ok
@@ -236,6 +237,25 @@ def send_menu_json():
         return jsonify({"matsu_vps_alive": "true", "error": "invalid data"}), 500
 
     return Response(payload_text, content_type="application/json")
+
+
+@app.get("/test/PostToSaito")
+def post_to_saito_test():
+
+    is_successed = post_to_saito()
+
+    if not is_successed:
+        return (
+            jsonify(
+                {
+                    "This is test": True,
+                    "matsu_vps_alive": "true",
+                    "error": "post to saito server failed",
+                }
+            ),
+            500,
+        )
+    return jsonify({"This is test": True, "ok": True}), 200
 
 
 if __name__ == "__main__":
