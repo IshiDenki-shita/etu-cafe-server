@@ -98,17 +98,17 @@ def find_latest_backup_file():
     return None
 
 
-def post_to_saito() -> bool:
+def post_to_saito():
     latest_file = find_latest_backup_file()
     if latest_file is None:
         print(f"斎藤VPSの送信時に最新バックアップを取得できませんでした。")
-        return False
+        return False, ""
 
     try:
         payload_text = latest_file.read_text(encoding="utf-8")
     except Exception as e:
         print(f"最新バックアップのJSONを読めませんでした\n{e}")
-        return False
+        return False, e
 
     url = cfg.SAITO_VPS_URL
 
@@ -122,9 +122,9 @@ def post_to_saito() -> bool:
 
     except requests.RequestException as e:
         print(f"斎藤サーバーへの送信で問題が発生しました。\n{e}")
-        return False
+        return False, e
 
-    return res.ok
+    return res.ok, "hogehoge"
 
 
 @app.post("/menu_post/json")
@@ -242,7 +242,8 @@ def send_menu_json():
 @app.get("/test/PostToSaito")
 def post_to_saito_test():
 
-    is_successed = post_to_saito()
+    is_successed, e = post_to_saito()
+    print(e)
 
     if not is_successed:
         return (
