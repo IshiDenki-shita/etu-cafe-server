@@ -1,0 +1,27 @@
+[Unit]
+Description=ETU Timetable Flask Server
+After=network.target
+
+[Service]
+Type=simple
+
+# 実行ユーザー
+User=etupr
+Group=etupr
+
+# 作業ディレクトリ
+WorkingDirectory=/home/etupr/ETU/etu-timetable-server
+
+# .venv を利用して Flask サーバー起動
+ExecStart=/home/etupr/ETU/etu-timetable-server/.venv/bin/python3 /home/etupr/ETU/etu-timetable-server/app.py
+
+# 自動再起動
+Restart=always
+RestartSec=3
+
+# ログ
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

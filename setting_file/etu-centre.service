@@ -1,0 +1,14 @@
+[Unit]
+Description=ETU Saito Server
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+ExecStart=/usr/bin/docker start etu-saito-server
+ExecStop=/usr/bin/docker stop etu-saito-server
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,16 @@
+[Unit]
+Description=ETU Cafe Flask Server
+After=network.target
+
+[Service]
+User=etupr
+
+WorkingDirectory=/home/etupr/ETU/etu-cafe-server
+
+ExecStart=/home/etupr/ETU/etu-cafe-server/.venv/bin/python app/flaskr.py
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
